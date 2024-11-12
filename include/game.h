@@ -26,7 +26,7 @@ class Game
 public:
   Game(); // uses defaults
   Game(int width, int height);
-
+  ~Game();
   void Run();
   void Setup();
   int Init();
@@ -49,7 +49,7 @@ private:
   bool isColliding(const sf::CircleShape& A,const sf::CircleShape& B);
   void Scoring();
   bool _gameOver;
-  bool _paused;
+   bool _paused;
   int _width, _height;
   eDirection _direction = STOP;
   int _score;

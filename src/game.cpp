@@ -14,6 +14,10 @@ Game::Game(int width, int height)
   Setup();
   setWindowSize(width, height);
   Init();
+ }
+
+Game::~Game(){
+    _tail.clear();
 }
 /**
  *@brief This function Initialises the game window the game will run
@@ -54,7 +58,8 @@ void Game::Setup()
   _fruit.setOutlineColor(sf::Color::Black);
   _fruit.setOutlineThickness(0.8f);
   _fruit.setFillColor(sf::Color::Red);
-
+  
+  std::cout<<"Length "<<static_cast<std::size_t>(_tail.size())<<std::endl;
   // left corner of the circle is x. the bottom the cricle is s
   // so to get to the right side (edge-diameter)
   generateRandomFruitSpawnPoint(_fruit);
@@ -242,9 +247,14 @@ void Game::Scoring()
     int speedY = _snakeHead.getPosition().y;
 
     _snakeHead.setPosition(speedX + _speed, speedY + _speed);
+
+    int count=0;
+    for(std::vector<sf::CircleShape>::iterator it =_tail.begin();it!=_tail.end();it++){
+      std::cout<<++count<<" "<<(*it).getPosition().x<<"x, "<<(*it).getPosition().y<<"y \n";    
+    }
   }
 }
-bool Game::isColliding(const sf::CircleShape& A, const sf::CircleShape& B){
+bool Game::isColliding(const sf::CircleShape& A, const sf::CircleShape& B) {
   /*This diagram shows how we'll make use of our basic AABB Collision
    *      B
    *  -----------
