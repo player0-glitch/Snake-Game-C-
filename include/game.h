@@ -1,5 +1,6 @@
 #pragma once
 
+#include "SFML/Graphics/Transformable.hpp"
 #include "SFML/Window.hpp"
 #include "SFML/Graphics.hpp"
 #include "SFML/Graphics/CircleShape.hpp"
@@ -45,7 +46,7 @@ public:
 private:
   void generateRandomFruitSpawnPoint(sf::CircleShape &v);
   bool enforceVectorRange(sf::Vector2f &v, float MIN, float MAX);
-
+  bool isColliding(const sf::CircleShape& A,const sf::CircleShape& B);
   void Scoring();
   bool _gameOver;
   bool _paused;

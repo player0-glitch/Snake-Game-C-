@@ -1,8 +1,6 @@
 #include "../include/game.h"
 #include <cstdlib>
 #include <iostream>
-#include <iterator>
-#include <memory>
 #include <ostream>
 
 Game::Game() : Game(WINDOW_WIDTH, WINDOW_HEIGHT)
@@ -36,7 +34,7 @@ void Game::Setup()
   _gameOver = false;
   _paused = false;
   _direction = RIGHT;
-  _speed = 5;
+  _speed = 15;
 
   // setting up the snake head
   _snakeHead.setPointCount(4.0f); // make a circle a diamond in sfml
@@ -59,9 +57,6 @@ void Game::Setup()
 
   // left corner of the circle is x. the bottom the cricle is s
   // so to get to the right side (edge-diameter)
-  std::cout << "x->" << _fruit.getPosition().x << "y->" << _fruit.getPosition().y << std::endl;
-  std::cout << "Screen Width -> " << _width << "Screen_height -> " << _height << std::endl;
-  std::cout << "Snake Head Location x " << _snakeHead.getPosition().x << std::endl;
   generateRandomFruitSpawnPoint(_fruit);
   _score = 0;
 }
@@ -134,9 +129,7 @@ void Game::Run()
     _window.display();
   }
 
-  // default behaviour is that the Escape key closes the window
 
-  // Drawing starts here with this method or else you window will leak and not respond
 }
 
 void Game::Logic()
@@ -235,20 +228,50 @@ void Game::Scoring()
     }
   }
 
-  if (_fruit.getPosition().x == _snakeHead.getPosition().x &&
-      _fruit.getPosition().y == _snakeHead.getPosition().y)
+
+  if(isColliding(_fruit,_snakeHead))
   {
     _score += 10;
     // Randomly generate another fruit
     generateRandomFruitSpawnPoint(_fruit);
     // add a tail
     _tail.emplace_back(sf::CircleShape(20.f, 2.0f)); // we're not copying into the vector
+    std::cout<<"Number of tails "<<_tail.size()<<std::endl;
                                                      // Adding speed to the snake
     int speedX = _snakeHead.getPosition().x;
     int speedY = _snakeHead.getPosition().y;
 
     _snakeHead.setPosition(speedX + _speed, speedY + _speed);
   }
+}
+bool Game::isColliding(const sf::CircleShape& A, const sf::CircleShape& B){
+  /*This diagram shows how we'll make use of our basic AABB Collision
+   *      B
+   *  -----------
+   *  |         |
+   *A |         | C
+      |         |
+      -----------
+   *      D
+   * */
+  
+  float leftA = A.getPosition().x;
+  float leftB = A.getPosition().y;
+  float leftC = A.getPosition().x+(2*A.getRadius());
+  float leftD = A.getPosition().y+(2*A.getRadius());
+
+  float rightA = B.getPosition().x;
+  float rightB = B.getPosition().y;
+  float rightC = B.getPosition().x+(2*A.getRadius());
+  float rightD = B.getPosition().y+(2*A.getRadius());
+  
+  if(leftA < rightC &&
+     leftC > rightA &&
+     leftD > rightB &&
+     leftB < rightD)
+      return true;
+  //by default
+  return false;
 }
 void Game::Draw()
 {
