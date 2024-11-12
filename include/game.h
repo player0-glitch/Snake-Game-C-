@@ -41,11 +41,11 @@ public:
   void setPause(bool pause);
   void setGameOver(bool gameover);
   void setWindowSize(int w, int h);
-  
+
 private:
   void generateRandomFruitSpawnPoint(sf::CircleShape &v);
   bool enforceVectorRange(sf::Vector2f &v, float MIN, float MAX);
-  
+
   void Scoring();
   bool _gameOver;
   bool _paused;

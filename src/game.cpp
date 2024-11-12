@@ -36,19 +36,19 @@ void Game::Setup()
   _gameOver = false;
   _paused = false;
   _direction = RIGHT;
-  _speed=5;
-  
+  _speed = 5;
+
   // setting up the snake head
   _snakeHead.setPointCount(4.0f); // make a circle a diamond in sfml
   int x = WINDOW_WIDTH / 2;
   int y = WINDOW_HEIGHT / 2;
 
-    sf::Color snakeColor(0, 255, 0);
+  sf::Color snakeColor(0, 255, 0);
   _snakeHead.setRadius(20.f);
   _snakeHead.setFillColor(snakeColor);
   _snakeHead.setPosition(x, y);
-  
-  //First tail value we have
+
+  // First tail value we have
   _tail.reserve(100);
   _tail.emplace_back(_snakeHead);
   // Setting up my fruits
@@ -57,12 +57,11 @@ void Game::Setup()
   _fruit.setOutlineThickness(0.8f);
   _fruit.setFillColor(sf::Color::Red);
 
-
-  //left corner of the circle is x. the bottom the cricle is s
-  //so to get to the right side (edge-diameter)
-  std::cout<<"x->"<<_fruit.getPosition().x<<"y->"<<_fruit.getPosition().y<<std::endl;
-  std::cout<<"Screen Width -> "<<_width<<"Screen_height -> "<<_height<<std::endl;
-  std::cout<<"Snake Head Location x "<<_snakeHead.getPosition().x<<std::endl;
+  // left corner of the circle is x. the bottom the cricle is s
+  // so to get to the right side (edge-diameter)
+  std::cout << "x->" << _fruit.getPosition().x << "y->" << _fruit.getPosition().y << std::endl;
+  std::cout << "Screen Width -> " << _width << "Screen_height -> " << _height << std::endl;
+  std::cout << "Snake Head Location x " << _snakeHead.getPosition().x << std::endl;
   generateRandomFruitSpawnPoint(_fruit);
   _score = 0;
 }
@@ -80,51 +79,53 @@ void Game::Run()
 
     while (_window.pollEvent(event))
     {
-        switch(event.type){
-          case sf::Event::Closed:
-            _window.close();
-            break;
-          case sf::Event::KeyPressed:
-            //siwtching between the Keyboard inputs
-            switch(event.key.code){
-              case sf::Keyboard::A:
-              case sf::Keyboard::Left:
-                _direction = eDirection::LEFT;
-                
-                std::cout<<"A\n";
-                break;
-              case sf::Keyboard::W:
-              case sf::Keyboard::Up:
-                _direction = eDirection::UP;
-              std::cout<<"W\n";
-                break;
-              case sf::Keyboard::D:
-              case sf::Keyboard::Right:
-                _direction = eDirection::RIGHT;
-                std::cout<<"D\n";
-                break;
-              case sf::Keyboard::S:
-              case sf::Keyboard::Down:
-                _direction = eDirection::DOWN;
-                std::cout<<"S\n";
-                break;
-            case sf::Keyboard::P:
-                std::cout<<"Pause "<<_paused;
-                setPause(!_paused);
-                std::cout<<" paused "<<!_paused<<std::endl;
-                break;  
-            case sf::Keyboard::Escape:
-                _window.close();
-              default:
-                //ignore all other possible keyboard events
-                break;
-          }
-        default:
-          //ignore all other possible events
+      switch (event.type)
+      {
+      case sf::Event::Closed:
+        _window.close();
+        break;
+      case sf::Event::KeyPressed:
+        // siwtching between the Keyboard inputs
+        switch (event.key.code)
+        {
+        case sf::Keyboard::A:
+        case sf::Keyboard::Left:
+          _direction = eDirection::LEFT;
+
+          std::cout << "A\n";
           break;
+        case sf::Keyboard::W:
+        case sf::Keyboard::Up:
+          _direction = eDirection::UP;
+          std::cout << "W\n";
+          break;
+        case sf::Keyboard::D:
+        case sf::Keyboard::Right:
+          _direction = eDirection::RIGHT;
+          std::cout << "D\n";
+          break;
+        case sf::Keyboard::S:
+        case sf::Keyboard::Down:
+          _direction = eDirection::DOWN;
+          std::cout << "S\n";
+          break;
+        case sf::Keyboard::P:
+          std::cout << "Pause " << _paused;
+          setPause(!_paused);
+          std::cout << " paused " << !_paused << std::endl;
+          break;
+        case sf::Keyboard::Escape:
+          _window.close();
+        default:
+          // ignore all other possible keyboard events
+          break;
+        }
+      default:
+        // ignore all other possible events
+        break;
       }
     }
-    
+
     Logic();
     // First Clear the screen
     _window.clear();
@@ -187,49 +188,50 @@ void Game::Logic()
   }
 
   wallWarping();
-  Scoring();  //execute the scoring system
+  Scoring(); // execute the scoring system
 }
 
 // no need to copy these values, they're already references to the snake head location
 //
 void Game::wallWarping()
 {
-  sf::Vector2f position =_snakeHead.getPosition();
-  float x= position.x;
+  sf::Vector2f position = _snakeHead.getPosition();
+  float x = position.x;
   float y = position.y;
-  float diameter=2*_snakeHead.getRadius();
+  float diameter = 2 * _snakeHead.getRadius();
 
-  if (x >= _width-diameter)
+  if (x >= _width - diameter)
   {
-    //x = 0;
-    _snakeHead.setPosition(0,y);
+    // x = 0;
+    _snakeHead.setPosition(0, y);
   }
   else if (x < 0)
   {
-    //x = _width - diameter
-    _snakeHead.setPosition(_width-diameter,y);
+    // x = _width - diameter
+    _snakeHead.setPosition(_width - diameter, y);
   }
 
-  if (y >= _height-diameter)
+  if (y >= _height - diameter)
   {
-    //y = 0;
-    _snakeHead.setPosition(x,0);
+    // y = 0;
+    _snakeHead.setPosition(x, 0);
   }
   else if (y < 0)
   {
-    //y = _height -diameter;
-    _snakeHead.setPosition(x,_height-diameter);
+    // y = _height -diameter;
+    _snakeHead.setPosition(x, _height - diameter);
   }
 }
 
 void Game::Scoring()
-{ 
-  for(auto iterator=_tail.begin();iterator!=_tail.end();iterator++){
-    
-    if((*iterator).getPosition().x==_snakeHead.getPosition().x &&
-      (*iterator).getPosition().y==_snakeHead.getPosition().y)
+{
+  for (auto iterator = _tail.begin(); iterator != _tail.end(); iterator++)
+  {
+
+    if ((*iterator).getPosition().x == _snakeHead.getPosition().x &&
+        (*iterator).getPosition().y == _snakeHead.getPosition().y)
     {
-      _gameOver=true;
+      _gameOver = true;
     }
   }
 
@@ -241,26 +243,24 @@ void Game::Scoring()
     generateRandomFruitSpawnPoint(_fruit);
     // add a tail
     _tail.emplace_back(sf::CircleShape(20.f, 2.0f)); // we're not copying into the vector
-  //Adding speed to the snake
-    int speedX=_snakeHead.getPosition().x;
-    int speedY=_snakeHead.getPosition().y;
+                                                     // Adding speed to the snake
+    int speedX = _snakeHead.getPosition().x;
+    int speedY = _snakeHead.getPosition().y;
 
-    _snakeHead.setPosition(speedX+_speed,speedY+_speed);
+    _snakeHead.setPosition(speedX + _speed, speedY + _speed);
   }
- 
 }
 void Game::Draw()
 {
   // Draw the fruit first
   // generateRandomFruitSpawnPoint(_fruit);
-  _window.draw(_fruit); // draws an apple
-  _window.draw(_snakeHead); //draws the snake tail
+  _window.draw(_fruit);     // draws an apple
+  _window.draw(_snakeHead); // draws the snake tail
 
-  for(auto iterator=_tail.begin();iterator!=_tail.end();iterator++){
+  for (auto iterator = _tail.begin(); iterator != _tail.end(); iterator++)
+  {
     _window.draw((*iterator));
   }
-
-
 }
 bool Game::enforceVectorRange(sf::Vector2f &v, float MIN, float MAX)
 {
@@ -269,16 +269,15 @@ bool Game::enforceVectorRange(sf::Vector2f &v, float MIN, float MAX)
 
 void Game::generateRandomFruitSpawnPoint(sf::CircleShape &v)
 {
-  //result = random num [(max-min)+min]
-  //where max -> _width-diameter
-  //      min -> _height-diameter
-  int maxX =_width-2*v.getRadius();
-  int maxY = _height-2*v.getRadius();
-  float x = (std::rand()%(maxX-0+1))+0;
-  float y = (std::rand()%(maxY-0+1))+0; 
-   
-  v.setPosition(x,y);
+  // result = random num [(max-min)+min]
+  // where max -> _width-diameter
+  //       min -> _height-diameter
+  int maxX = _width - 2 * v.getRadius();
+  int maxY = _height - 2 * v.getRadius();
+  float x = (std::rand() % (maxX - 0 + 1)) + 0;
+  float y = (std::rand() % (maxY - 0 + 1)) + 0;
 
+  v.setPosition(x, y);
 }
 ///////////////////////////////////////
 //    GETTTERS                                  //
