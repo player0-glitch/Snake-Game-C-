@@ -51,6 +51,7 @@ void Game::Setup()
   _snakeHead.setPosition(x, y);
 
   // First tail value we have
+  _tail.clear();
   _tail.reserve(100);
   _tail.emplace_back(_snakeHead);
   // Setting up my fruits
@@ -243,19 +244,13 @@ void Game::Scoring()
     _tail.emplace_back(sf::CircleShape(20.f, 2.0f)); // we're not copying into the vector
     std::cout<<"Number of tails "<<_tail.size()<<std::endl;
                                                      // Adding speed to the snake
-    int speedX = _snakeHead.getPosition().x;
-    int speedY = _snakeHead.getPosition().y;
+    _speed+=10;
+    _snakeHead.setPosition(_snakeHead.getPosition().x+_speed, _snakeHead.getPosition().y+ _speed);
 
-    _snakeHead.setPosition(speedX + _speed, speedY + _speed);
-
-    int count=0;
-    for(std::vector<sf::CircleShape>::iterator it =_tail.begin();it!=_tail.end();it++){
-      std::cout<<++count<<" "<<(*it).getPosition().x<<"x, "<<(*it).getPosition().y<<"y \n";    
-    }
   }
 }
 bool Game::isColliding(const sf::CircleShape& A, const sf::CircleShape& B) {
-  /*This diagram shows how we'll make use of our basic AABB Collision
+  /*This diagram shows how we'll make use of our basic AABB CollisioN
    *      B
    *  -----------
    *  |         |
@@ -336,3 +331,12 @@ void Game::setPause(bool pause)
 {
   _paused = pause;
 }
+
+void Game::printVec(const std::vector<sf::CircleShape>& v){
+    int count=0;
+    for(std::vector<sf::CircleShape>::iterator it =_tail.begin();it!=_tail.end();it++){
+      std::cout<<++count<<" "<<(*it).getPosition().x<<"x, "<<(*it).getPosition().y<<"y \n";    
+    }
+
+}
+

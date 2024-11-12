@@ -15,4 +15,4 @@ game.o: src/game.cpp include/game.h
 run: $(TARGET)
 	$(TARGET)
 clean:
-	rm *.o  bin/*.exe .*exe
+	rm *.o  bin/*.exe 

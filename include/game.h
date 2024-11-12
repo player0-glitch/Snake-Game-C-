@@ -42,12 +42,13 @@ public:
   void setPause(bool pause);
   void setGameOver(bool gameover);
   void setWindowSize(int w, int h);
-
+  void CleanUp();
 private:
   void generateRandomFruitSpawnPoint(sf::CircleShape &v);
   bool enforceVectorRange(sf::Vector2f &v, float MIN, float MAX);
   bool isColliding(const sf::CircleShape& A,const sf::CircleShape& B);
   void Scoring();
+  void printVec(const std::vector<sf::CircleShape>& v);
   bool _gameOver;
    bool _paused;
   int _width, _height;
