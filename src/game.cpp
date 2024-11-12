@@ -29,8 +29,8 @@ int Game::Init()
   _settings.antialiasingLevel = 4;
   _window.create(sf::VideoMode(_width, _height), "Snake-Game-C", sf::Style::Default, _settings);
   _window.setVerticalSyncEnabled(true);
-  _window.setFramerateLimit(60); // capping our framerate at 60
-
+  _window.setFramerateLimit(120); // capping our framerate at 60   
+  
   return SUCCESS;
 }
 void Game::Setup()
