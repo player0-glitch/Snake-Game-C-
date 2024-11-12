@@ -1,7 +1,12 @@
 [
     {
-        "directory":" ",
-    "command":"/msys64/mingw64/bin/g++ -I/include -g -std=c++17 -o bin/snake-game-c",
+        "directory":"/GitHub/Kazo0o/Snake-Game-c",
+    "command":"/msys64/mingw64/bin/g++ -Iinclude -g -std=c++17 -o bin/snake-game-c",
     "file":"main.cpp"
+    },
+    {
+      "directory":"/GitHub/Kazo0o/Snake-Game-c",
+      "command":"/msys64/mingw64/bin/g++ -Iinclude -g -std=c++17 -c bin/debug/game.o game.cpp ",
+      "file":"src/game.cpp"
     }
 ]

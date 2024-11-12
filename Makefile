@@ -1,5 +1,5 @@
 CXX = g++
-CXXFLAGS= -c -Wall -std=c++17
+CXXFLAGS= -c -Wall -std=c++17 -mconsole
 SRC =src
 TARGET=bin/snake-game-c
 OUTPUT_DIR=bin

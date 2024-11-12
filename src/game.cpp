@@ -297,6 +297,7 @@ bool Game::enforceVectorRange(sf::Vector2f &v, float MIN, float MAX)
 
 void Game::generateRandomFruitSpawnPoint(sf::CircleShape &v)
 {
+  
   // result = random num [(max-min)+min]
   // where max -> _width-diameter
   //       min -> _height-diameter
