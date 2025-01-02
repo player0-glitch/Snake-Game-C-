@@ -1,301 +1,202 @@
 #include "../include/game.h"
+#include "../include/boxcollision.h"
+#include <SFML/Config.hpp>
+#include <SFML/Graphics/RectangleShape.hpp>
+#include <SFML/Graphics/Shape.hpp>
+#include <SFML/System/Vector2.hpp>
+#include <cstddef>
 #include <cstdlib>
 #include <iostream>
 #include <ostream>
 
-Game::Game() : Game(WINDOW_WIDTH, WINDOW_HEIGHT) {
-  Setup();
-  Init();
-}
-
+using std::cout;
+using std::endl;
 Game::Game(int width, int height) {
-  Setup();
-  setWindowSize(width, height);
-  Init();
+  _width = width;
+  _height = height;
+
+  setUp();
 }
-
-Game::~Game() { _tail.clear(); }
-/**
- *@brief This function Initialises the game window the game will run
- * @return void
- */
-int Game::Init() {
-  // = sf::Window();
-  _settings.antialiasingLevel = 4;
-  _window.create(sf::VideoMode(_width, _height), "Snake-Game-C",
-                 sf::Style::Default, _settings);
-  _window.setVerticalSyncEnabled(true);
-  _window.setFramerateLimit(120); // capping our framerate at 60
-
-  return SUCCESS;
-}
-void Game::Setup() {
-  _gameOver = false;
-  _paused = false;
-  _direction = RIGHT;
-
-  // setting up the snake head
-  _snakeHead.setPointCount(4.0f); // make a circle a diamond in sfml
-  int x = WINDOW_WIDTH / 2;
-  int y = WINDOW_HEIGHT / 2;
-
-  sf::Color snakeColor(0, 255, 0);
-  _snakeHead.setRadius(20.f);
-  _snakeHead.setFillColor(snakeColor);
-  _snakeHead.setPosition(x, y);
-
-  // First tail value we have
-  _tail.clear();
-  _tail.reserve(100);
-  _tail.emplace_back(_snakeHead);
-  // Setting up my fruits
-  _fruit.setRadius(20.f);
-  _fruit.setOutlineColor(sf::Color::Black);
-  _fruit.setOutlineThickness(0.8f);
-  _fruit.setFillColor(sf::Color::Red);
-
-  std::cout << "Length " << static_cast<std::size_t>(_tail.size()) << std::endl;
-  // left corner of the circle is x. the bottom the cricle is s
-  // so to get to the right side (edge-diameter)
-  generateRandomFruitSpawnPoint(_fruit);
+Game::~Game() {}
+void Game::setUp() {
+  loadMusic("../resource/sound/eat.wav");
+  createFood();
+  createSnake();
+  _newDirection = _snake.front().getPosition();
+  _eDirection = RIGHT;
+  _currentDirection = {1, 0};
   _score = 0;
+  _updateTime = 500.0f;
+  _fixedTimeStep = 1.0f / 60.0f; // 60FPS
 }
 
-/*
- * @brief This function is responsible for running the game loop
- * @param window is the window in context that we've opened
- */
-void Game::Run() {
-  // Initialise a window
-  while (_window.isOpen()) {
-    sf::Event event;
-
-    while (_window.pollEvent(event)) {
-      switch (event.type) {
-      case sf::Event::Closed:
-        _window.close();
-        break;
-      case sf::Event::KeyPressed:
-        // siwtching between the Keyboard inputs
-        switch (event.key.code) {
-        case sf::Keyboard::A:
-        case sf::Keyboard::Left:
-          _direction = eDirection::LEFT;
-
-          std::cout << "A\n";
-          break;
-        case sf::Keyboard::W:
-        case sf::Keyboard::Up:
-          _direction = eDirection::UP;
-          std::cout << "W\n";
-          break;
-        case sf::Keyboard::D:
-        case sf::Keyboard::Right:
-          _direction = eDirection::RIGHT;
-          std::cout << "D\n";
-          break;
-        case sf::Keyboard::S:
-        case sf::Keyboard::Down:
-          _direction = eDirection::DOWN;
-          std::cout << "S\n";
-          break;
-        case sf::Keyboard::P:
-          std::cout << "Pause " << _paused;
-          setPause(!_paused);
-          std::cout << " paused " << !_paused << std::endl;
-          break;
-        case sf::Keyboard::Escape:
-          _window.close();
-        default:
-          // ignore all other possible keyboard events
-          break;
-        }
-      default:
-        // ignore all other possible events
-        break;
-      }
-    }
-
-    Logic();
-    // First Clear the screen
-    _window.clear();
-    Draw();
-    // Update the window
-    _window.display();
+sf::Vector2f Game::randLocation() {
+  int x = rand() % CELL_COUNT * CELL_SIZE;
+  int y = rand() % CELL_COUNT * CELL_SIZE;
+  return sf::Vector2f(x, y);
+}
+void Game::createFood() {
+  sf::Vector2f pos = randLocation();
+  _food.setPosition(pos);
+  _food.setFillColor(DARK_GREEN);
+  _food.setSize({25, 25}); // the size is based on the size of the cells.
+  // I couldn't be bothered to not hardcode these
+}
+void Game::loadMusic(std::string musicFIle) {
+  if (!_eatSound.openFromFile(musicFIle))
+    exit(ERR::MUSIC);
+}
+void Game::createSnake() {
+  // these indeces aren't going to influence the snake queue
+  sf::Vector2f pos = randLocation();
+  /*pos.x = x;*/
+  /*pos.y = y;*/
+  _snake = {sf::RectangleShape(), sf::RectangleShape(), sf::RectangleShape()};
+  for (std::size_t i = 0; i < _snake.size(); i++) {
+    // Customise the snake body and stuff
+    _snake.at(i).setFillColor(DARK_GREEN);
+    _snake.at(i).setPosition(pos);
+    _snake.at(i).setSize({25, 25});
+    /*pos.x += 25;*/
+    /*pos.y += 25;*/
   }
 }
 
-void Game::Logic() {
-  sf::Vector2f prevPos;
-
-  // This should make it easier to work with the position of the snake head
-  int snakeX = _snakeHead.getPosition().x;
-  int snakeY = _snakeHead.getPosition().y;
-
-  prevPos.x = _tail.at(0).getPosition().x;
-  prevPos.y = _tail.at(0).getPosition().y;
-
-  sf::Vector2f prevPos2; // previous previous position
-  // we start off the head at the head
-  _tail.at(0).setPosition(snakeX, snakeY);
-
-  for (auto it = _tail.begin() + 1; it != _tail.end(); ++it) {
-    // This should move the 2nd last frame to make it the last frame
-    prevPos2.x = (*it).getPosition().x;
-    prevPos2.y = (*it).getPosition().y;
-
-    // this should set the current frame position of tail to the last previous
-    // position
-    (*it).setPosition(prevPos.x, prevPos.y);
-
-    prevPos = prevPos2;
-  }
-
-  switch (_direction) {
-    // Where no incrementing or decrementing means position doesnt
-    // change in that direction
-  case LEFT:
-    _snakeHead.setPosition(--snakeX, snakeY);
-    break;
-  case RIGHT:
-    _snakeHead.setPosition(++snakeX, snakeY);
-    break;
+void Game::moveInDirection() {
+  switch (_eDirection) {
   case UP:
-    _snakeHead.setPosition(snakeX, --snakeY);
+    if (_currentDirection.y != -1) // snake is NOT going down
+    {
+      _newDirection.y -= 25;
+      // reset the current direction to the new current direction
+      _currentDirection = {0, 1};
+      sf::RectangleShape front = _snake.front();
+      _snake.pop_back();
+      /*_snake.emplace_front(front);*/
+      _snake.emplace_front(makeNewRectangle(_newDirection));
+    }
     break;
   case DOWN:
-    _snakeHead.setPosition(snakeX, ++snakeY);
+    if (_currentDirection.y != 1) // snake is NOT goin up
+    {
+      _newDirection.y += 25;
+      _currentDirection = {0, -1};
+      sf::RectangleShape front = _snake.front();
+      _snake.pop_back();
+      /*_snake.emplace_front(front);*/
+      _snake.emplace_front(makeNewRectangle(_newDirection));
+    }
+    break;
+  case LEFT:
+    if (_currentDirection.x != 1) // snake is NOT going right
+    {
+      _newDirection.x -= 25;
+      _currentDirection = {-1, 0};
+      sf::RectangleShape front = _snake.front();
+      _snake.pop_back();
+      /*_snake.emplace_front(front);*/
+      _snake.emplace_front(makeNewRectangle(_newDirection));
+    }
+    break;
+  case RIGHT:
+    if (_currentDirection.x != -1) // snake if NOT going left
+    {
+      _newDirection.x += 25;
+      _currentDirection = {1, 0};
+      sf::RectangleShape front = _snake.front();
+      _snake.pop_back();
+      /*_snake.emplace_front(front);*/
+      _snake.emplace_front(makeNewRectangle(_newDirection));
+    }
     break;
   default:
-    // Do Nothing here at all
     break;
   }
-
-  wallWarping();
-  Scoring(); // execute the scoring system
+  // Do Bounds Checking right here
 }
+sf::RectangleShape Game::makeNewRectangle(sf::Vector2f pos) {
+  sf::RectangleShape rect;
+  rect.setPosition(pos);
+  rect.setFillColor(DARK_GREEN);
+  rect.setSize({25, 25});
+  return rect;
+}
+void Game::setDirection(const DIRECTION &direction) { _eDirection = direction; }
+void Game::run(sf::Int32 &elapsedTime) {
 
-// no need to copy these values, they're already references to the snake head
-// location
-//
+  if (elapsedTime >= _updateTime) {
+    elapsedTime = 0.0;
+    moveInDirection();
+
+    wallWarping();
+  }
+
+  eat();
+}
 void Game::wallWarping() {
-  sf::Vector2f position = _snakeHead.getPosition();
-  float x = position.x;
-  float y = position.y;
-  float diameter = 2 * _snakeHead.getRadius();
-
-  if (x >= _width - diameter) {
-    // x = 0;
-    _snakeHead.setPosition(0, y);
-  } else if (x < 0) {
-    // x = _width - diameter
-    _snakeHead.setPosition(_width - diameter, y);
+  sf::RectangleShape head = _snake.front();
+  // wallWarping up or down
+  if (head.getPosition().y < 0) {
+    _newDirection.y = _height;
+    _newDirection.x = head.getPosition().x;
+    _snake.pop_back();
+    _snake.emplace_front(makeNewRectangle(_newDirection));
+  }
+  if (head.getPosition().y >= _height) {
+    _newDirection.y = 0;
+    _snake.pop_back();
+    _snake.emplace_front(makeNewRectangle(_newDirection));
   }
 
-  if (y >= _height - diameter) {
-    // y = 0;
-    _snakeHead.setPosition(x, 0);
-  } else if (y < 0) {
-    // y = _height -diameter;
-    _snakeHead.setPosition(x, _height - diameter);
+  // wallwarping left or right
+  if (head.getPosition().x <= 0) {
+    _newDirection.x = _width;
+    _newDirection.y = head.getPosition().y;
+    _snake.pop_back();
+    _snake.emplace_front(makeNewRectangle(_newDirection));
   }
-}
-
-void Game::Scoring() {
-  for (auto iterator = _tail.begin(); iterator != _tail.end(); iterator++) {
-
-    if ((*iterator).getPosition().x == _snakeHead.getPosition().x &&
-        (*iterator).getPosition().y == _snakeHead.getPosition().y) {
-      _gameOver = true;
-    }
-  }
-
-  if (isColliding(_fruit, _snakeHead)) {
-    _score += 10;
-    // Randomly generate another fruit
-    generateRandomFruitSpawnPoint(_fruit);
-    // add a tail
-    _tail.emplace_back(
-        sf::CircleShape(20.f, 2.0f)); // we're not copying into the vector
-    std::cout << "Number of tails " << _tail.size() << std::endl;
-    // Adding speed to the snake
-    _speed += 10;
-    _snakeHead.setPosition(_snakeHead.getPosition().x + _speed,
-                           _snakeHead.getPosition().y + _speed);
+  if (head.getPosition().x >= _width) {
+    _newDirection.x = 0;
+    _snake.pop_back();
+    _snake.emplace_front(makeNewRectangle(_newDirection));
   }
 }
-bool Game::isColliding(const sf::CircleShape &A, const sf::CircleShape &B) {
-  /*This diagram shows how we'll make use of our basic AABB CollisioN
+void Game::eat() {
+  /* Box boundaries for both food and snake
    *      B
-   *  -----------
-   *  |         |
-   *A |         | C
-      |         |
-      -----------
+   *   --------
+   *  A|      |C
+   *   |______|
    *      D
-   * */
+   * (B,A)-> min
+   * (D,C)-> max
+   */
+  // variable declartions are just for easier typing and readability
+  AABB foodBox(_food.getPosition().x, _food.getPosition().x + _food.getSize().x,
+               _food.getPosition().y,
+               _food.getPosition().y + _food.getSize().y);
+  AABB snakeHeadBox(_snake.front().getPosition().x,
+                    _snake.front().getPosition().x + _snake.front().getSize().x,
+                    _snake.front().getPosition().y,
+                    _snake.front().getPosition().y +
+                        _snake.front().getSize().y);
 
-  float leftA = A.getPosition().x;
-  float leftB = A.getPosition().y;
-  float leftC = A.getPosition().x + (2 * A.getRadius());
-  float leftD = A.getPosition().y + (2 * A.getRadius());
+  if (snakeHeadBox.checkCollision(foodBox)) {
+    _eatSound.play();
+    createFood();
+    // grow the snake
+    sf::Vector2f tail = _snake.back().getPosition();
+    _snake.emplace_back(makeNewRectangle(tail));
+    _score++;
 
-  float rightA = B.getPosition().x;
-  float rightB = B.getPosition().y;
-  float rightC = B.getPosition().x + (2 * A.getRadius());
-  float rightD = B.getPosition().y + (2 * A.getRadius());
-
-  if (leftA < rightC && leftC > rightA && leftD > rightB && leftB < rightD)
-    return true;
-  // by default
-  return false;
-}
-void Game::Draw() {
-  // Draw the fruit first
-  // generateRandomFruitSpawnPoint(_fruit);
-  _window.draw(_fruit);     // draws an apple
-  _window.draw(_snakeHead); // draws the snake tail
-
-  for (auto iterator = _tail.begin(); iterator != _tail.end(); iterator++) {
-    _window.draw((*iterator));
+    _updateTime -= 25.0f;
+    // make sure the update time is never lower than 0.05 seconds
   }
-}
-bool Game::enforceVectorRange(sf::Vector2f &v, float MIN, float MAX) {
-  return true; // TODO LATER
+  /*if (_score > 1 && _score % 5 == 0) {*/
+  /*  _updateTime = _updateTime - (float)50.0f;*/
+  /*}*/
+  if (_updateTime <= 0.05f)
+    _updateTime = 0.05f;
 }
 
-void Game::generateRandomFruitSpawnPoint(sf::CircleShape &v) {
-
-  // result = random num [(max-min)+min]
-  // where max -> _width-diameter
-  //       min -> _height-diameter
-  int maxX = _width - 2 * v.getRadius();
-  int maxY = _height - 2 * v.getRadius();
-  float x = (std::rand() % (maxX - 0 + 1)) + 0;
-  float y = (std::rand() % (maxY - 0 + 1)) + 0;
-
-  v.setPosition(x, y);
-}
-///////////////////////////////////////
-//    GETTTERS                                  //
-//////////////////////////////////////
-bool Game::isGameOver() const { return _gameOver; };
-////////////////////////////////////////////
-//  SETTERS                                               //
-///////////////////////////////////////////
-void Game::setWindowSize(int w, int h) {
-  _width = w;
-  _height = h;
-}
-void Game::setGameOver(bool gameover) { _gameOver = gameover; }
-
-void Game::setPause(bool pause) { _paused = pause; }
-
-void Game::printVec(const std::vector<sf::CircleShape> &v) {
-  int count = 0;
-  for (std::vector<sf::CircleShape>::iterator it = _tail.begin();
-       it != _tail.end(); it++) {
-    std::cout << ++count << " " << (*it).getPosition().x << "x, "
-              << (*it).getPosition().y << "y \n";
-  }
-}
+void Game::selfCollision() {}
